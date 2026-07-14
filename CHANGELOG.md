@@ -15,3 +15,19 @@
 
 ### 테스트 결과
 * `git status` 명령을 통해 `.gitignore`가 올바르게 작동하여 `README.md` 및 `images/` 외의 파일들이 모두 추적 대상에서 배제된 것을 확인함.
+
+---
+
+## [2026-07-14 - 추가 작업]
+### 변경 목적
+* `README.md` 내에 VRML 적색 원뿔(Cone) 실행 예시 이미지 링크 추가
+
+### 주요 결정 사항
+* VRML Cone 예시 코드 설명 하단에 `images/paper_image1.png` 이미지가 표시되도록 마크다운 이미지 구문 추가
+
+### 수정한 파일
+* [MODIFY] [README.md](file:///e:/개인_백업/Backup/WORK/논문/README.md)
+
+### 테스트 결과
+* 마크다운 내 이미지 상대 경로(`images/paper_image1.png`)의 올바른 연결 확인.
+

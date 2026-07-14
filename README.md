@@ -158,6 +158,8 @@ Shape {
 
 제일 첫 줄은 주석문이지만 반드시 포함시켜야 하는 구문입니다. 이 줄은 어떤 플랫폼에서 작성된 VRML 파일이라 할지라도 역시 플랫폼에 상관없이 읽혀질 수 있도록 유니코드 포맷(UTF: UniCode Text Format)으로 정의하는 부분이기 때문입니다.
 
+![Red Cone](images/paper_image1.png)
+
 Shape 노드는 `appearance`와 `geometry` 필드를 가지고 있으며, 각각은 다시 Appearance와 Cone 노드를 포함하고 있습니다. 이런 식으로 Appearance 노드는 `material` 필드를 가지고 다시 Material 노드는 `diffuseColor` 필드를 가집니다. Material 노드의 `diffuseColor` 값은 Red 값만 1로 되어 있어 실행하면 적색의 Cone이 나타납니다.
 
 ---
