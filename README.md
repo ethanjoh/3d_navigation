@@ -289,7 +289,7 @@ public boolean handleEvent(Event event) {
 }
 ```
 
-![node](images/Code_Generated_image.png)
+![node](images/Code_Generated_Image.png)
 
 이와 같은 방식으로 자바 애플릿의 스크롤바 조작 신호가 EAI를 통해 VRML 6축 로봇 모델 노드로 전달되어 축이 연동되어 회전하게 됩니다.
 
