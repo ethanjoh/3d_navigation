@@ -1,5 +1,7 @@
 # 인터넷을 이용한 Remote navigation 및 Remote control이 가능한 3차원 가상공간 구축
 
+# (Construction of a 3D virtual space capable of remote navigation and remote control via the internet)
+
 * **작성:** 1998.12
 
 ---
