@@ -1,0 +1,12 @@
+# Ignore everything by default
+*
+
+# Allow directories to be scanned
+!*/
+
+# White-list only specific files and directories
+!README.md
+!images/
+!images/**
+!.gitignore
+!CHANGELOG.md
