@@ -1,0 +1,42 @@
+# GitHub Pages 호스팅을 위해 demo 폴더 내 정적 파일들만 배포하는 워크플로우
+name: Deploy demo to GitHub Pages
+
+on:
+  push:
+    branches: ["main"] # main 브랜치에 푸시될 때 트리거됩니다.
+
+  # Settings > Pages 탭에서 수동 실행(Workflow Dispatch)을 허용합니다.
+  workflow_dispatch:
+
+# 빌드 및 배포에 필요한 권한 부여
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 배포 충돌을 방지하기 위해 동시 실행 제어
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'demo' # 배포 대상이 될 폴더를 demo로 지정합니다.
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
