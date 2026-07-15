@@ -1,0 +1,290 @@
+<!-- Three.js를 사용하여 GLB 3D 모델을 로드하고 렌더링하는 뷰어 페이지 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Viewer - Three.js</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Three.js ES Modules Import Map -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loader-container">
+            <div id="loader-text" class="loader-text pulse">모델 데이터를 불러오는 중...</div>
+            <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <div id="progress-percentage" class="progress-percentage">0%</div>
+            <div id="error-message" class="error-message"></div>
+        </div>
+    </div>
+
+    <!-- Main Viewer Layout -->
+    <div class="viewer-container">
+        <!-- 3D Canvas -->
+        <div id="canvas-container">
+            <canvas id="three-canvas"></canvas>
+        </div>
+
+        <!-- HTML UI Overlay -->
+        <div class="overlay-ui">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <a href="index.html" class="btn-back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    대시보드로 돌아가기
+                </a>
+                
+                <!-- Model Info Panel -->
+                <div class="model-info-panel">
+                    <h2 id="info-title" class="model-title">3D Model</h2>
+                    <p id="info-desc" class="model-desc">모델 정보를 불러오는 중입니다.</p>
+                </div>
+            </div>
+
+            <!-- Bottom Bar -->
+            <div class="bottom-bar">
+                <!-- Controls Guide -->
+                <div class="controls-guide">
+                    <p>🖱️ <strong>좌클릭 드래그</strong> : 카메라 회전 (Rotate)</p>
+                    <p>🖱️ <strong>우클릭 드래그</strong> : 화면 이동 (Pan)</p>
+                    <p>🎡 <strong>마우스 휠 Scroll</strong> : 확대 및 축소 (Zoom)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js Viewer Script -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        // 1. Model Metadata Configuration
+        const modelsConfig = {
+            drill: {
+                title: "Drill Machine",
+                desc: "drill-exam 폴더의 drill.glb 파일입니다. 금속 재질의 반사와 세부 드릴 파트 결합 구조를 확인할 수 있습니다.",
+                path: "drill-exam/drill.glb"
+            },
+            nc: {
+                title: "NC Machine",
+                desc: "nc_exam 폴더의 nc.glb 파일입니다. 수치제어 정밀 공작기계의 전체 형상과 베이스 프레임을 시각화합니다.",
+                path: "nc_exam/nc.glb"
+            },
+            robot: {
+                title: "Robot Pendant",
+                desc: "robot_exam 폴더의 robot.glb 파일입니다. 산업 현장에서 흔히 사용되는 휴대형 컨트롤 Pendant 기기 조작 쉘 3D 형상입니다.",
+                path: "robot_exam/robot.glb"
+            }
+        };
+
+        // Parse query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const modelKey = urlParams.get('model');
+        const modelData = modelsConfig[modelKey];
+
+        const loaderText = document.getElementById('loader-text');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercentage = document.getElementById('progress-percentage');
+        const errorMessage = document.getElementById('error-message');
+        const loadingScreen = document.getElementById('loading-screen');
+
+        if (!modelData) {
+            // Invalid model parameter
+            loaderText.style.display = 'none';
+            progressBar.parentElement.style.display = 'none';
+            progressPercentage.style.display = 'none';
+            errorMessage.textContent = '올바르지 않은 모델 접근입니다. 대시보드로 다시 이동해 주세요.';
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 3000);
+        } else {
+            // Update UI Information Panels
+            document.getElementById('info-title').textContent = modelData.title;
+            document.getElementById('info-desc').textContent = modelData.desc;
+            document.title = `${modelData.title} - 3D Viewer`;
+
+            // Start initializing Three.js application
+            initThreeApp(modelData.path);
+        }
+
+        function initThreeApp(modelPath) {
+            const canvas = document.getElementById('three-canvas');
+            
+            // 2. Scene setup
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0b0d);
+            scene.fog = new THREE.FogExp2(0x0a0b0d, 0.015);
+
+            // 3. Camera setup
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(5, 5, 5);
+
+            // 4. Renderer setup
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.0;
+
+            // 5. Controls setup
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2 + 0.1; // Limit panning below ground slightly
+            controls.minDistance = 0.5;
+            controls.maxDistance = 100;
+
+            // 6. Lighting setup
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.2);
+            dirLight1.position.set(10, 15, 10);
+            dirLight1.castShadow = true;
+            dirLight1.shadow.mapSize.width = 2048;
+            dirLight1.shadow.mapSize.height = 2048;
+            dirLight1.shadow.camera.near = 0.5;
+            dirLight1.shadow.camera.far = 25;
+            dirLight1.shadow.bias = -0.0001;
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.DirectionalLight(0xa78bfa, 0.5); // Subtle violet fill light
+            dirLight2.position.set(-10, 5, -10);
+            scene.add(dirLight2);
+
+            // 7. Grid & Ground Helper
+            const gridHelper = new THREE.GridHelper(60, 60, 0x8b5cf6, 0x1f2937);
+            gridHelper.position.y = -0.01;
+            gridHelper.material.opacity = 0.2;
+            gridHelper.material.transparent = true;
+            scene.add(gridHelper);
+
+            // 8. GLTF/GLB Loader
+            const loader = new GLTFLoader();
+            loader.load(
+                modelPath,
+                // On Load Success
+                function (gltf) {
+                    const model = gltf.scene;
+                    
+                    // Enable shadows for all meshes in the loaded model
+                    model.traverse((node) => {
+                        if (node.isMesh) {
+                            node.castShadow = true;
+                            node.receiveShadow = true;
+                            
+                            // Enhance materials if needed (roughness, metalness tweak)
+                            if (node.material) {
+                                node.material.depthWrite = true;
+                            }
+                        }
+                    });
+
+                    scene.add(model);
+
+                    // Auto-adjust camera focus based on model bounding box
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+
+                    // Center model geometry offset
+                    model.position.x += (model.position.x - center.x);
+                    model.position.y += (model.position.y - box.min.y); // Place model bottom on ground
+                    model.position.z += (model.position.z - center.z);
+
+                    // Re-calculate bounding box since position changed
+                    const adjustedBox = new THREE.Box3().setFromObject(model);
+                    const adjustedCenter = adjustedBox.getCenter(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    
+                    // Calculate optimal camera distance
+                    const fov = camera.fov * (Math.PI / 180);
+                    let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+                    cameraZ *= 1.4; // Multiplier to add some padding
+
+                    camera.position.set(cameraZ, maxDim * 0.8, cameraZ);
+                    camera.lookAt(adjustedCenter);
+                    
+                    controls.target.copy(adjustedCenter);
+                    controls.update();
+
+                    // Fade out loading screen
+                    setTimeout(() => {
+                        loadingScreen.style.opacity = 0;
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                        }, 500);
+                    }, 200);
+                },
+                // On Progress
+                function (xhr) {
+                    if (xhr.total > 0) {
+                        const percent = Math.round((xhr.loaded / xhr.total) * 100);
+                        progressBar.style.width = percent + '%';
+                        progressPercentage.textContent = percent + '%';
+                        
+                        if (percent >= 100) {
+                            loaderText.textContent = '장면을 생성하는 중...';
+                        }
+                    } else {
+                        // Fallback when Content-Length header is missing
+                        const loadedKB = Math.round(xhr.loaded / 1024);
+                        loaderText.textContent = `데이터를 다운로드하는 중 (${loadedKB} KB)...`;
+                        progressBar.style.width = '70%'; // Simulating progress
+                        progressPercentage.textContent = '--%';
+                    }
+                },
+                // On Error
+                function (error) {
+                    console.error('An error happened while loading GLB model:', error);
+                    loaderText.style.display = 'none';
+                    progressBar.parentElement.style.display = 'none';
+                    progressPercentage.style.display = 'none';
+                    errorMessage.textContent = '3D 모델 파일을 로딩하는 데 실패했습니다. 파일 경로 및 브라우저 CORS 설정을 확인해 주세요.';
+                    errorMessage.style.display = 'block';
+                }
+            );
+
+            // 9. Resize Handling
+            window.addEventListener('resize', onWindowResize);
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            // 10. Animation Loop
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // Update controls
+                controls.update();
+                
+                // Render Scene
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+    </script>
+</body>
+</html>

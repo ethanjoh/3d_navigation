@@ -1,0 +1,80 @@
+<!-- 3D 모델 선택을 위한 메인 대시보드 페이지 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model Space - Three.js Viewer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="bg-glow-alt"></div>
+
+    <div class="dashboard-container">
+        <header class="header">
+            <h1>3D Model Space</h1>
+            <p>Three.js WebGL 기술을 사용하여 각 폴더 내에 배치된 GLB 3D 입체 모델을 실시간으로 로드하고 자유롭게 제어해 보세요.</p>
+            <p class="header-notice" style="margin-top: 1rem; font-size: 0.95rem; color: var(--accent-primary); font-weight: 400; opacity: 0.9;">
+                💡 본 데모는 기존의 WRL(VRML) 파일을 Blender에서 Import한 후 GLB 포맷으로 변환하여, 웹 브라우저에서 별도의 뷰어 확장 프로그램(Plugin) 설치 없이도 즉시 감상할 수 있도록 제작되었습니다.
+            </p>
+        </header>
+
+        <main class="grid">
+            <!-- Drill Card -->
+            <a href="viewer.html?model=drill" class="card">
+                <div class="card-content">
+                    <div class="card-icon">⚙️</div>
+                    <h2 class="card-title">Drill Machine</h2>
+                    <p class="card-desc">드릴 머신 부품 및 외관 기하학적 형태의 3D 모델입니다. 정밀한 조립 구조와 세부 메커니즘을 3D 뷰포트에서 확인하세요.</p>
+                </div>
+                <div class="card-footer">
+                    <span class="card-tag">drill-exam / drill.glb</span>
+                    <div class="card-arrow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <!-- NC Machine Card -->
+            <a href="viewer.html?model=nc" class="card">
+                <div class="card-content">
+                    <div class="card-icon">⚡</div>
+                    <h2 class="card-title">NC Machine</h2>
+                    <p class="card-desc">수치제어(NC) 공작기계 장비의 3D 모델입니다. 대형 기계 설비의 형태와 구조적 레이아웃을 다각도로 탐색할 수 있습니다.</p>
+                </div>
+                <div class="card-footer">
+                    <span class="card-tag">nc_exam / nc.glb</span>
+                    <div class="card-arrow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Robot Card -->
+            <a href="viewer.html?model=robot" class="card">
+                <div class="card-content">
+                    <div class="card-icon">🤖</div>
+                    <h2 class="card-title">Robot Pendant</h2>
+                    <p class="card-desc">산업용 로봇 펜던트 장비의 3D 모델입니다. 하드웨어 바디 및 관절 구동 파트의 구조를 가상 공간 내에서 직접 제어합니다.</p>
+                </div>
+                <div class="card-footer">
+                    <span class="card-tag">robot_exam / robot.glb</span>
+                    <div class="card-arrow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </div>
+                </div>
+            </a>
+        </main>
+    </div>
+</body>
+</html>
