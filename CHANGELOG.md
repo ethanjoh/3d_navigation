@@ -14,4 +14,5 @@
 - 깃허브 페이지 배포 호환을 위해 뷰어 앱 관련 리소스 및 3D GLB 모델 파일 일체를 `demo` 폴더 구조로 패키징 및 복사 이전 완료
 - `index.html` 메인 헤더 영역에 WRL ➔ Blender GLB 변환 방법 및 무설치 감상 안내 문구 추가 (src 및 demo)
 - `demo` 폴더만 GitHub Pages에 독립적으로 자동 배포해 주는 GitHub Actions 워크플로우(`.github/workflows/deploy.yml`) 설정 추가
+- `demo` 폴더에 로컬 실행 가이드와 조작 안내를 서술한 `README.md` 문서 추가
 
