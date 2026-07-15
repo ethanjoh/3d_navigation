@@ -1,4 +1,4 @@
-# 인터넷 기반 원격 탐사 및 조작이 가능한 3차원 가상공간 구축
+# 인터넷 기반 원격 탐사 및 조작이 가능한 3차원 가상공간 구축 (Construction of a 3D virtual space capable of internet-based remote sensing and manipulation)
 > * **작성:** 1998.10
 
 ---
