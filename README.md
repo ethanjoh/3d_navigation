@@ -2,6 +2,7 @@
 
 * **원글 작성:** 1998.12 / **편집**: 2026.07
 * **작성동기:** Web3D 관련 프로젝트
+* **데모:** [https://ethanjoh.github.io/3d_navigation/](https://ethanjoh.github.io/3d_navigation/)
 
 ---
 
