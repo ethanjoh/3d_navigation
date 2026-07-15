@@ -1,6 +1,22 @@
 <!-- Git 저장소 동기화 및 변경 이력을 기록하는 문서 -->
 # CHANGELOG
 
+## [2026-07-15]
+### 변경 목적
+* `src` 디렉토리 내의 Java Applet 및 VRML 연동 예제 소스코드(`drill-exam`, `nc_exam`, `robot_exam`) 사용법 가이드 문서 작성
+
+### 주요 결정 사항
+* 각 예제 소스코드(CP949 인코딩)를 분석하여 파일 역할 정의 및 Java-VRML EAI(External Authoring Interface)의 작동 메커니즘을 상세히 기재함.
+* 현대 웹 브라우저에서 실행 불가한 제약 사항에 대응하여, JDK 8 이하의 `appletviewer` 및 오프라인 플러그인을 활용한 컴파일 및 로컬 실행 방안을 가이드로 제시함.
+
+### 수정한 파일
+* [MODIFY] [How_To_Use_Sources.md](file:///e:/개인_백업/Backup/WORK/논문/How_To_Use_Sources.md): 소스코드 구성 파일 정리, 연동 아키텍처 및 상세 구동법 가이드 작성.
+
+### 테스트 결과
+* 가이드 문서 내 마크다운 서식, 머메이드 다이어그램 문법 검증 및 파일 절대 경로 링크의 올바른 연결 확인.
+
+---
+
 ## [2026-07-14]
 ### 변경 목적
 * 로컬 디렉토리와 GitHub 원격 저장소(`https://github.com/ethanjoh/3d_navigation`)의 동기화 설정 및 동기화 파일 범위 제한
