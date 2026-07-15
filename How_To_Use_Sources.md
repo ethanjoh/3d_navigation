@@ -19,6 +19,7 @@
 * [Drill_Jar.html](/src/drill-exam/Drill_Jar.html): 웹 브라우저상에서 VRML 모델(`.wrl`)과 애플릿(`.class`)을 한 화면에 임베딩하는 HTML 파일.
 * `drill.au`: 드릴 가공이 완료(스크롤바 최대값 도달)되었을 때 재생되는 가공음 사운드 파일.
 * `drillbg.jpg`: 애플릿 제어판의 배경 이미지 파일.
+![드릴머신](images/screenshot_drill.png)
 
 ### ② [nc_exam](/src/nc_exam) (NC 가공기 시뮬레이터)
 
@@ -28,6 +29,7 @@
 * [nc.wrl](/src/nc_exam/nc.wrl): NC 가공기 본체, 바이트, 테이블 구조가 설계된 VRML 모델 파일.
 * [NCmachine.html](/src/nc_exam/NCmachine.html): VRML 뷰어 영역과 조작용 자바 애플릿 영역을 결합한 HTML 파일.
 * `ncbg.jpg`: 애플릿 제어판의 배경 이미지 파일.
+![NC머신](images/screenshot_NC.png)
 
 ### ③ [robot_exam](/src/robot_exam) (6축 로봇 팔 & 티칭 펜던트)
 
@@ -37,6 +39,7 @@
 * [robot.wrl](/src/robot_exam/robot.wrl): 관절별 계층 구조(Parent12 ~ Axis6)로 이루어진 6축 로봇 팔 VRML 모델 파일.
 * [Pendant1.html](/src/robot_exam/Pendant1.html): 로봇 3D 뷰어 영역과 티칭 펜던트 인터페이스를 담은 HTML 파일.
 * `Screenshot_robot_arm.png`: 구동 화면의 캡처 예시 이미지.
+![로봇암](images/screenshot_robot_arm.png)
 
 ---
 
