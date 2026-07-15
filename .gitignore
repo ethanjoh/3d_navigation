@@ -1,16 +1,5 @@
-# Ignore everything by default
-*
 
-# Allow directories to be scanned
-!*/
+paper.hwp
+paerp.hwpx
+Cone.wrl
 
-# White-list only specific files and directories
-!README.md
-!images/
-!images/**
-!.gitignore
-!CHANGELOG.md
-!REPORT.md
-!APPENDIX_VRML_history_and_future.md
-!APPENDIX_VRML_Guide.md
-!APPENDIX_VRML_Advanced_Guide.md
