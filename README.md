@@ -369,16 +369,4 @@ public boolean handleEvent(Event event) {
 ### 관련 사이트
 
 1. [VRML Consortium](http://www.vrml.org) **(Dead Link)** (현재 비영리단체 Web3D Consortium인 `https://www.web3d.org`로 이전되었습니다.)
-2. [The VRML Repository](http://www.sdsc.edu/vrml/) **(Dead Link)**
-3. [VRML이 Java를 만났을 때...](http://user.chollian.net/~vrmljava/) **(Dead Link)** (천리안 개인 홈페이지 호스팅 종료)
-4. [VRML Tutorial](http://sim.di.uminho.pt/vrmltut/toc.html) **(Dead Link)**
-5. [Interfacing Java and VRML](http://www.hermetica.com/technologia/java/jvrml/) **(Dead Link)**
-6. [VRML FAQ](http://vag.vrml.org/VRML_FAQ.html) **(Dead Link)**
-7. [AUTOVRML](http://members.xoom.com/autovrml) **(Dead Link)** (구형 xoom 서버 서비스 종료)
-8. [사이버 모델하우스](http://dsland.co.kr/model/model_1.htm) **(Dead Link)**
-9. [KUMHO BESTHOME](http://soback.kornet21.net/~besthome/) **(Dead Link)**
-10. [VRML Teleservicing Project](http://www.robotic.dlr.de/Joerg.Vogel/Vrml/Teleservicing/viewer.html) **(Dead Link)**
-11. [IMIGE SYSTEM Cyber Tech](http://indy.imige.co.kr/~CyberTech/vrml/frame.html) **(Dead Link)**
-12. [Construct Evolve or Die](http://www.construct.net/) **(Dead Link)**
-13. [VRweb Ultimate Directory](http://www.vrweb.net/) **(Dead Link)**
-14. [JAVA Soft](http://www.javasoft.com/) **(Dead Link)** (Sun Microsystems 인수 합병 이후 Oracle 공식 자바 페이지 `https://www.oracle.com/java/` 등으로 이전되었습니다.)
+2. [JAVA Soft](http://www.javasoft.com/) **(Dead Link)** (Sun Microsystems 인수 합병 이후 Oracle 공식 자바 페이지 `https://www.oracle.com/java/` 등으로 이전되었습니다.)
