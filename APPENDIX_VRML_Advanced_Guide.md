@@ -292,5 +292,4 @@ Separator {
 
 VRML 명세에 대한 심층 기술 문서 및 FAQ 데이터 아카이빙은 아래의 주요 리서치 포털에서 보다 구체적으로 만나보실 수 있습니다.
 
-* **SDSC VRML 정보 파트너스 허브**: [http://rosebud.sdsc.edu/SDSC/Partners/vrml](http://rosebud.sdsc.edu/SDSC/Partners/vrml)
 * **VRML Repository & FAQ 포털**: [http://www.web3d.org](http://www.web3d.org) (구 VRML 컨소시엄 공식 기술 협회 채널)
