@@ -38,7 +38,6 @@
 * [Pendant.java](/src/robot_exam/Pendant.java): 티칭 펜던트 버튼 입력(0~9, 소수점), 클리어(Clear), 홈 위치(Home position) 기능 및 각 축 회전 연산 로직이 담긴 애플릿 소스코드.
 * [robot.wrl](/src/robot_exam/robot.wrl): 관절별 계층 구조(Parent12 ~ Axis6)로 이루어진 6축 로봇 팔 VRML 모델 파일.
 * [Pendant1.html](/src/robot_exam/Pendant1.html): 로봇 3D 뷰어 영역과 티칭 펜던트 인터페이스를 담은 HTML 파일.
-* `Screenshot_robot_arm.png`: 구동 화면의 캡처 예시 이미지.
 ![로봇암](images/Screenshot_robot_arm.png)
 
 ---
