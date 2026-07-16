@@ -15,4 +15,5 @@
 - `index.html` 메인 헤더 영역에 WRL ➔ Blender GLB 변환 방법 및 무설치 감상 안내 문구 추가 (src 및 demo)
 - `demo` 폴더만 GitHub Pages에 독립적으로 자동 배포해 주는 GitHub Actions 워크플로우(`.github/workflows/deploy.yml`) 설정 추가
 - `demo` 폴더에 로컬 실행 가이드와 조작 안내를 서술한 `README.md` 문서 추가
+- 메인 대시보드(`index.html`) 우측 상단에 깃허브 저장소(`3d_navigation`)로 이동하는 Glassmorphism 스타일 복귀 버튼 및 관련 CSS/반응형 미디어 쿼리 추가 (src 및 demo)
 

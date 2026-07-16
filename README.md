@@ -1,7 +1,9 @@
 # 인터넷을 이용한 Remote navigation 및 Remote control이 가능한 3차원 가상공간 구축 (Construction of a 3D virtual space capable of remote navigation and remote control via the internet)
 
 * **원글 작성:** 1998.12 / **편집**: 2026.07
-* **작성동기:** Web3D 관련 프로젝트
+* **작성동기:** 컴퓨터 하드웨어도 변변찮던 시절, VRML은 인터넷 공간에서 3D를 구현해주는 신기술이었고,  
+스마트 팩토리 구현을 위해 웹상에서 가상공간을 구현하고 원격 제어할 수 있는 기술을 구현해보고자 하였습니다.  
+지금은 사장된 기술이지만 기록을 위해 남겨둡니다.
 * **데모:** [https://ethanjoh.github.io/3d_navigation/](https://ethanjoh.github.io/3d_navigation/)
 
 ---

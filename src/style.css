@@ -68,6 +68,7 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
+    position: relative;
 }
 
 .header {
@@ -416,4 +417,45 @@ body {
 
 .pulse {
     animation: pulse 2s infinite ease-in-out;
+}
+
+/* GitHub Link Button */
+.github-link {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 1.3rem;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: var(--transition-smooth);
+    z-index: 10;
+}
+
+.github-link:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+    transform: translateY(-2px);
+}
+
+.github-link svg {
+    fill: currentColor;
+}
+
+/* Responsive adjustments for GitHub Link */
+@media (max-width: 980px) {
+    .github-link {
+        position: static;
+        margin-bottom: 2rem;
+    }
 }
