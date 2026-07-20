@@ -1,6 +1,6 @@
 # Documents & Raw Files
-paper.hwp
-paper.hwpx
+*.hwp
+*.hwpx
 Cone.wrl
 
 # Backup & Temporary 3D Assets
