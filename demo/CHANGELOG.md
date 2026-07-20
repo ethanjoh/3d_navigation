@@ -1,6 +1,23 @@
 <!-- 변경 이력을 관리하는 CHANGELOG 문서 -->
 # Changelog
 
+## [2026-07-20] - AGV 및 Lab 3D 모델 바이너리 최신화
+
+### 변경 목적
+- AGV 및 Laboratory 3D GLB 모델의 최신 메쉬 자산을 웹 뷰어 시스템에 반영.
+
+### 주요 결정 사항
+- `demo/agv-exam/agv.glb` 3D 바이너리 자산 업데이트
+- `demo/lab-exam/lab.glb` 3D 바이너리 자산 업데이트
+
+### 수정한 파일
+- `demo/agv-exam/agv.glb`
+- `demo/lab-exam/lab.glb`
+- `demo/CHANGELOG.md`
+
+### 테스트 및 검증 결과
+- 웹 뷰어 환경에서 최신 3D GLB 모델 정상 로딩 검증 완료
+
 ## [2026-07-20] - AGV 클릭 인터랙션 및 3D 궤도 주행 기능 추가
 
 ### 변경 목적
