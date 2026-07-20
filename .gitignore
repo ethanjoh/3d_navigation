@@ -1,5 +1,16 @@
-
+# Documents & Raw Files
 paper.hwp
 paper.hwpx
 Cone.wrl
 
+# Backup & Temporary 3D Assets
+*-org.glb
+*.bak
+*.tmp
+*~
+
+# Operating System & IDE Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
