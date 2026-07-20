@@ -78,7 +78,7 @@
         const modelsConfig = {
             agv: {
                 title: "AGV (Automated Guided Vehicle)",
-                desc: "agv-exam 폴더의 agv.glb 파일입니다. 무인 운반차 이송 장비의 외형과 휠/바디 기하학적 구조를 시각화합니다.",
+                desc: "agv-exam 폴더의 agv.glb 파일입니다. 마우스로 AGV 3D 차량을 클릭하면 3D 트랙 궤도를 따라 자율 주행을 시작하거나 정지시킬 수 있습니다.",
                 path: "agv-exam/agv.glb"
             },
             ballboy: {
@@ -145,6 +145,18 @@
             document.getElementById('info-desc').textContent = modelData.desc;
             document.title = `${modelData.title} - 3D Viewer`;
 
+            // AGV Click Hint UI
+            if (modelKey === 'agv') {
+                const guideContainer = document.querySelector('.controls-guide');
+                if (guideContainer) {
+                    const clickHint = document.createElement('p');
+                    clickHint.style.color = '#60a5fa';
+                    clickHint.style.fontWeight = '600';
+                    clickHint.innerHTML = '🚗 <strong>AGV 차량 클릭</strong> : 궤도 자율 주행 시작/정지 토글';
+                    guideContainer.prepend(clickHint);
+                }
+            }
+
             // Start initializing Three.js application
             initThreeApp(modelData.path);
         }
@@ -203,6 +215,14 @@
             gridHelper.material.transparent = true;
             scene.add(gridHelper);
 
+            // AGV Special Variables
+            let loadedModel = null;
+            let agvVehicleGroup = null;
+            let agvCurve = null;
+            let agvPathLine = null;
+            let isDriving = false;
+            let progress = 0;
+
             // 8. GLTF/GLB Loader
             const loader = new GLTFLoader();
             loader.load(
@@ -210,6 +230,7 @@
                 // On Load Success
                 function (gltf) {
                     const model = gltf.scene;
+                    loadedModel = model;
                     
                     // Enable shadows for all meshes in the loaded model
                     model.traverse((node) => {
@@ -241,6 +262,62 @@
                     const adjustedCenter = adjustedBox.getCenter(new THREE.Vector3());
                     const maxDim = Math.max(size.x, size.y, size.z);
                     
+                    // Setup AGV Track Curve & Isolate Vehicle Meshes
+                    if (modelKey === 'agv') {
+                        agvVehicleGroup = new THREE.Group();
+                        scene.add(agvVehicleGroup);
+
+                        // Find meshes belonging to AGV Vehicle (exclude background boxes)
+                        const meshesToMove = [];
+                        model.traverse((node) => {
+                            if (node.isMesh) {
+                                if (!node.name.includes('Shape_Box') && !node.name.toLowerCase().includes('box')) {
+                                    meshesToMove.push(node);
+                                }
+                            }
+                        });
+
+                        // Re-parent vehicle meshes into agvVehicleGroup
+                        meshesToMove.forEach((mesh) => {
+                            agvVehicleGroup.add(mesh);
+                        });
+
+                        // Align AGV Vehicle bottom to Y=0 ground plane
+                        const vehicleBox = new THREE.Box3().setFromObject(agvVehicleGroup);
+                        const minY = vehicleBox.min.y;
+                        agvVehicleGroup.children.forEach((child) => {
+                            child.position.y -= minY;
+                        });
+
+                        // Re-calculate Vehicle Size after Y zero-ground adjustment
+                        const adjustedVehicleBox = new THREE.Box3().setFromObject(agvVehicleGroup);
+                        const vehicleSize = adjustedVehicleBox.getSize(new THREE.Vector3());
+
+                        const rw = Math.max(vehicleSize.x * 2.8, 6);
+                        const rd = Math.max(vehicleSize.z * 2.8, 5);
+                        
+                        const trackWaypoints = [
+                            new THREE.Vector3(-rw / 2, 0, -rd / 2),
+                            new THREE.Vector3(rw / 2, 0, -rd / 2),
+                            new THREE.Vector3(rw / 2, 0, rd / 2),
+                            new THREE.Vector3(-rw / 2, 0, rd / 2)
+                        ];
+                        agvCurve = new THREE.CatmullRomCurve3(trackWaypoints, true, 'centripetal', 0.2);
+                        
+                        // Visual Path Line
+                        const pathPoints = agvCurve.getPoints(120);
+                        const pathGeo = new THREE.BufferGeometry().setFromPoints(pathPoints);
+                        const pathMat = new THREE.LineBasicMaterial({
+                            color: 0x60a5fa,
+                            transparent: true,
+                            opacity: 0.7,
+                            linewidth: 2
+                        });
+                        agvPathLine = new THREE.LineLoop(pathGeo, pathMat);
+                        agvPathLine.position.y = 0.02; // Slightly above ground
+                        scene.add(agvPathLine);
+                    }
+
                     // Calculate optimal camera distance
                     const fov = camera.fov * (Math.PI / 180);
                     let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
@@ -289,6 +366,50 @@
                 }
             );
 
+            // Raycaster Interaction Setup
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            let pointerDownTime = 0;
+            let pointerDownPos = { x: 0, y: 0 };
+
+            const getRaycastTarget = () => (modelKey === 'agv' && agvVehicleGroup ? agvVehicleGroup : loadedModel);
+
+            window.addEventListener('pointerdown', (e) => {
+                pointerDownTime = Date.now();
+                pointerDownPos = { x: e.clientX, y: e.clientY };
+            });
+
+            window.addEventListener('pointerup', (e) => {
+                const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
+                const pressTime = Date.now() - pointerDownTime;
+                const targetObj = getRaycastTarget();
+                
+                // Only trigger if it was a quick click without dragging camera
+                if (moveDist < 6 && pressTime < 300 && targetObj && modelKey === 'agv') {
+                    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                    
+                    raycaster.setFromCamera(mouse, camera);
+                    const intersects = raycaster.intersectObject(targetObj, true);
+                    
+                    if (intersects.length > 0) {
+                        isDriving = !isDriving;
+                    }
+                }
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                const targetObj = getRaycastTarget();
+                if (targetObj && modelKey === 'agv') {
+                    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                    
+                    raycaster.setFromCamera(mouse, camera);
+                    const intersects = raycaster.intersectObject(targetObj, true);
+                    canvas.style.cursor = intersects.length > 0 ? 'pointer' : 'default';
+                }
+            });
+
             // 9. Resize Handling
             window.addEventListener('resize', onWindowResize);
 
@@ -302,6 +423,20 @@
             function animate() {
                 requestAnimationFrame(animate);
                 
+                // AGV Driving Update
+                if (modelKey === 'agv' && isDriving && agvCurve && agvVehicleGroup) {
+                    progress = (progress + 0.0012) % 1;
+                    const currentPos = agvCurve.getPointAt(progress);
+                    const nextPos = agvCurve.getPointAt((progress + 0.003) % 1);
+                    
+                    agvVehicleGroup.position.x = currentPos.x;
+                    agvVehicleGroup.position.y = 0;
+                    agvVehicleGroup.position.z = currentPos.z;
+                    
+                    const lookTarget = new THREE.Vector3(nextPos.x, agvVehicleGroup.position.y, nextPos.z);
+                    agvVehicleGroup.lookAt(lookTarget);
+                }
+
                 // Update controls
                 controls.update();
                 
