@@ -229,8 +229,6 @@
 
             // Rose Blooming Interaction Variables
             let isRoseBloomed = false;
-            const roseBudScale = new THREE.Vector3(0.4, 0.4, 0.4);
-            const roseBloomScale = new THREE.Vector3(1.25, 1.25, 1.25);
             let rosePetals = [];
 
             // 8. GLTF/GLB Loader
@@ -242,26 +240,57 @@
                     const model = gltf.scene;
                     loadedModel = model;
                     
-                    // Enable shadows for all meshes in the loaded model
+                    // Enable shadows & store initial transform for each node
                     model.traverse((node) => {
                         if (node.isMesh) {
                             node.castShadow = true;
                             node.receiveShadow = true;
                             
-                            // Enhance materials if needed (roughness, metalness tweak)
                             if (node.material) {
                                 node.material.depthWrite = true;
                             }
 
-                            if (modelKey === 'rose') {
-                                rosePetals.push(node);
+                            // Store initial transforms for blooming logic
+                            node.userData.initialPos = node.position.clone();
+                            node.userData.initialRot = node.rotation.clone();
+                            node.userData.initialScale = node.scale.clone();
+
+                            // Identify petal meshes (Shape_Extrusion.001 ~ 032)
+                            if (modelKey === 'rose' && node.name.startsWith('Shape_Extrusion.')) {
+                                const petalNum = parseInt(node.name.replace('Shape_Extrusion.', ''), 10);
+                                if (!isNaN(petalNum) && petalNum >= 1 && petalNum <= 32) {
+                                    node.userData.petalNum = petalNum;
+
+                                    // Determine petal layer (outer to inner)
+                                    // 1~8: Outer, 9~16: Mid-Outer, 17~24: Mid-Inner, 25~32: Inner Core
+                                    const layerIndex = Math.floor((petalNum - 1) / 8); // 0, 1, 2, 3
+                                    const angleInLayer = ((petalNum - 1) % 8) * (Math.PI / 4);
+
+                                    // Calculate blooming target transforms
+                                    // Outer petals open wide (larger tilt), inner petals tilt less
+                                    const tiltAmount = (4 - layerIndex) * 0.45; // Radians to open outward
+                                    const outwardDist = (4 - layerIndex) * 0.18; // Distance to push outward
+
+                                    const targetPos = node.position.clone();
+                                    targetPos.x += Math.sin(angleInLayer) * outwardDist;
+                                    targetPos.z += Math.cos(angleInLayer) * outwardDist;
+                                    targetPos.y += (layerIndex * 0.03); // Slightly lift inner petals
+
+                                    const targetRot = node.rotation.clone();
+                                    targetRot.x += Math.cos(angleInLayer) * tiltAmount;
+                                    targetRot.z -= Math.sin(angleInLayer) * tiltAmount;
+
+                                    const targetScale = node.scale.clone().multiplyScalar(1.35 + (3 - layerIndex) * 0.2);
+
+                                    node.userData.bloomPos = targetPos;
+                                    node.userData.bloomRot = targetRot;
+                                    node.userData.bloomScale = targetScale;
+
+                                    rosePetals.push(node);
+                                }
                             }
                         }
                     });
-
-                    if (modelKey === 'rose') {
-                        model.scale.copy(roseBudScale);
-                    }
 
                     scene.add(model);
 
@@ -459,23 +488,24 @@
                     agvVehicleGroup.lookAt(lookTarget);
                 }
 
-                // Rose Blooming Animation Update
-                if (modelKey === 'rose' && loadedModel) {
-                    const targetScale = isRoseBloomed ? roseBloomScale : roseBudScale;
-                    loadedModel.scale.lerp(targetScale, 0.04);
+                // Rose Authentic 32-Petal Blooming Animation Update
+                if (modelKey === 'rose' && rosePetals.length > 0) {
+                    rosePetals.forEach((petal) => {
+                        const targetPos = isRoseBloomed ? petal.userData.bloomPos : petal.userData.initialPos;
+                        const targetRot = isRoseBloomed ? petal.userData.bloomRot : petal.userData.initialRot;
+                        const targetScale = isRoseBloomed ? petal.userData.bloomScale : petal.userData.initialScale;
 
-                    // Add subtle rotation and petal spreading effect when bloomed
-                    if (isRoseBloomed) {
-                        loadedModel.rotation.y += 0.008;
-                        rosePetals.forEach((petal, idx) => {
-                            const expandFactor = (idx + 1) * 0.005;
-                            petal.rotation.z = Math.sin(Date.now() * 0.002 + idx) * 0.08;
-                        });
-                    } else {
-                        loadedModel.rotation.y = THREE.MathUtils.lerp(loadedModel.rotation.y, 0, 0.05);
-                        rosePetals.forEach((petal) => {
-                            petal.rotation.z = THREE.MathUtils.lerp(petal.rotation.z, 0, 0.05);
-                        });
+                        // Smooth interpolation (lerp) for opening/closing petals
+                        petal.position.lerp(targetPos, 0.06);
+                        petal.rotation.x = THREE.MathUtils.lerp(petal.rotation.x, targetRot.x, 0.06);
+                        petal.rotation.y = THREE.MathUtils.lerp(petal.rotation.y, targetRot.y, 0.06);
+                        petal.rotation.z = THREE.MathUtils.lerp(petal.rotation.z, targetRot.z, 0.06);
+                        petal.scale.lerp(targetScale, 0.06);
+                    });
+
+                    // Gentle whole flower rotation when bloomed
+                    if (isRoseBloomed && loadedModel) {
+                        loadedModel.rotation.y += 0.004;
                     }
                 }
 
