@@ -129,11 +129,9 @@
         const errorMessage = document.getElementById('error-message');
         const loadingScreen = document.getElementById('loading-screen');
 
-        // Global State & Toggles
-        window.isRoseBloomed = false;
-        window.toggleRoseBloom = function() {
-            window.isRoseBloomed = !window.isRoseBloomed;
-        };
+        // Global State & Toggles (accessible from all scopes)
+        let _roseBloomed = false;
+        let _roseAnimProgress = 0; // 0 = bud, 1 = fully bloomed
 
         if (!modelData) {
             // Invalid model parameter
@@ -160,23 +158,25 @@
                 clickHint.innerHTML = '🚗 <strong>AGV 차량 클릭</strong> : 궤도 자율 주행 시작/정지 토글';
                 guideContainer.prepend(clickHint);
             } else if (modelKey === 'rose' && guideContainer) {
+                const clickHint = document.createElement('p');
+                clickHint.style.color = '#f43f5e';
+                clickHint.style.fontWeight = '600';
+                clickHint.innerHTML = '🌹 <strong>장미 클릭</strong> 또는 아래 버튼 : 피어나기 / 오므라들기';
+                guideContainer.prepend(clickHint);
+
                 const clickBtn = document.createElement('button');
                 clickBtn.id = 'btn-toggle-rose';
-                clickBtn.className = 'btn-interactive-toggle';
-                clickBtn.style.cssText = 'background: linear-gradient(135deg, #f43f5e, #e11d48); color: white; border: none; padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 0.5rem; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4); font-size: 0.85rem; z-index: 1000; position: relative;';
-                clickBtn.innerHTML = '🌹 <strong>장미 꽃 피우기 / 오므라들기</strong>';
-                guideContainer.prepend(clickBtn);
+                clickBtn.style.cssText = 'background: linear-gradient(135deg, #f43f5e, #e11d48); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 0.6rem; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 4px 16px rgba(244, 63, 94, 0.5); font-size: 0.95rem; font-family: inherit; letter-spacing: 0.02em;';
+                clickBtn.textContent = '🌹 장미 꽃 피우기 / 오므라들기';
+                guideContainer.appendChild(clickBtn);
 
-                clickBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
+                clickBtn.addEventListener('pointerdown', (e) => {
                     e.stopPropagation();
-                    window.toggleRoseBloom();
                 });
-
-                clickBtn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
+                clickBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    window.toggleRoseBloom();
+                    _roseBloomed = !_roseBloomed;
+                    console.log('[Rose] Button clicked. Bloomed:', _roseBloomed);
                 });
             }
 
@@ -209,7 +209,7 @@
             const controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
-            controls.maxPolarAngle = Math.PI / 2 + 0.1; // Limit panning below ground slightly
+            controls.maxPolarAngle = Math.PI / 2 + 0.1;
             controls.minDistance = 0.5;
             controls.maxDistance = 100;
 
@@ -227,7 +227,7 @@
             dirLight1.shadow.bias = -0.0001;
             scene.add(dirLight1);
 
-            const dirLight2 = new THREE.DirectionalLight(0xa78bfa, 0.5); // Subtle violet fill light
+            const dirLight2 = new THREE.DirectionalLight(0xa78bfa, 0.5);
             dirLight2.position.set(-10, 5, -10);
             scene.add(dirLight2);
 
@@ -238,7 +238,7 @@
             gridHelper.material.transparent = true;
             scene.add(gridHelper);
 
-            // AGV & Rose Special Variables
+            // AGV Special Variables
             let loadedModel = null;
             let agvVehicleGroup = null;
             let agvCurve = null;
@@ -246,8 +246,8 @@
             let isDriving = false;
             let progress = 0;
 
-            // Rose Blooming Interaction Variables
-            let rosePetals = [];
+            // Rose Special Variables
+            let rosePetalData = []; // { mesh, initPos, initScale, initRotX, initRotY, initRotZ }
 
             // 8. GLTF/GLB Loader
             const loader = new GLTFLoader();
@@ -257,55 +257,14 @@
                 function (gltf) {
                     const model = gltf.scene;
                     loadedModel = model;
-                    
-                    // Enable shadows & store initial transform for each node
+
+                    // Enable shadows
                     model.traverse((node) => {
                         if (node.isMesh) {
                             node.castShadow = true;
                             node.receiveShadow = true;
-                            
                             if (node.material) {
                                 node.material.depthWrite = true;
-                            }
-
-                            // Store initial transforms for blooming logic
-                            node.userData.initialPos = node.position.clone();
-                            node.userData.initialRot = node.rotation.clone();
-                            node.userData.initialScale = node.scale.clone();
-
-                            // Identify petal meshes (Shape_Extrusion.001 ~ 032)
-                            if (modelKey === 'rose' && node.name.startsWith('Shape_Extrusion.')) {
-                                const petalNum = parseInt(node.name.replace('Shape_Extrusion.', ''), 10);
-                                if (!isNaN(petalNum) && petalNum >= 1 && petalNum <= 32) {
-                                    node.userData.petalNum = petalNum;
-
-                                    // Determine petal layer (outer to inner)
-                                    // 1~8: Outer, 9~16: Mid-Outer, 17~24: Mid-Inner, 25~32: Inner Core
-                                    const layerIndex = Math.floor((petalNum - 1) / 8); // 0, 1, 2, 3
-                                    const angleInLayer = ((petalNum - 1) % 8) * (Math.PI / 4);
-
-                                    // Calculate blooming target transforms
-                                    // Outer petals open wide (larger tilt), inner petals tilt less
-                                    const tiltAmount = (4 - layerIndex) * 0.45; // Radians to open outward
-                                    const outwardDist = (4 - layerIndex) * 0.18; // Distance to push outward
-
-                                    const targetPos = node.position.clone();
-                                    targetPos.x += Math.sin(angleInLayer) * outwardDist;
-                                    targetPos.z += Math.cos(angleInLayer) * outwardDist;
-                                    targetPos.y += (layerIndex * 0.03); // Slightly lift inner petals
-
-                                    const targetRot = node.rotation.clone();
-                                    targetRot.x += Math.cos(angleInLayer) * tiltAmount;
-                                    targetRot.z -= Math.sin(angleInLayer) * tiltAmount;
-
-                                    const targetScale = node.scale.clone().multiplyScalar(1.35 + (3 - layerIndex) * 0.2);
-
-                                    node.userData.bloomPos = targetPos;
-                                    node.userData.bloomRot = targetRot;
-                                    node.userData.bloomScale = targetScale;
-
-                                    rosePetals.push(node);
-                                }
                             }
                         }
                     });
@@ -317,22 +276,39 @@
                     const center = box.getCenter(new THREE.Vector3());
                     const size = box.getSize(new THREE.Vector3());
 
-                    // Center model geometry offset
                     model.position.x += (model.position.x - center.x);
-                    model.position.y += (model.position.y - box.min.y); // Place model bottom on ground
+                    model.position.y += (model.position.y - box.min.y);
                     model.position.z += (model.position.z - center.z);
 
-                    // Re-calculate bounding box since position changed
                     const adjustedBox = new THREE.Box3().setFromObject(model);
                     const adjustedCenter = adjustedBox.getCenter(new THREE.Vector3());
                     const maxDim = Math.max(size.x, size.y, size.z);
+
+                    // Rose: Collect petal data AFTER model is positioned
+                    if (modelKey === 'rose') {
+                        model.traverse((node) => {
+                            if (node.isMesh && node.name.startsWith('Shape_Extrusion.')) {
+                                rosePetalData.push({
+                                    mesh: node,
+                                    initPos: node.position.clone(),
+                                    initScale: node.scale.clone(),
+                                    initRotX: node.rotation.x,
+                                    initRotY: node.rotation.y,
+                                    initRotZ: node.rotation.z,
+                                });
+                            }
+                        });
+
+                        // Start as bud (small scale)
+                        model.scale.set(0.4, 0.4, 0.4);
+                        console.log(`[Rose] Loaded ${rosePetalData.length} petal meshes.`);
+                    }
                     
                     // Setup AGV Track Curve & Isolate Vehicle Meshes
                     if (modelKey === 'agv') {
                         agvVehicleGroup = new THREE.Group();
                         scene.add(agvVehicleGroup);
 
-                        // Find meshes belonging to AGV Vehicle (exclude background boxes)
                         const meshesToMove = [];
                         model.traverse((node) => {
                             if (node.isMesh) {
@@ -342,19 +318,16 @@
                             }
                         });
 
-                        // Re-parent vehicle meshes into agvVehicleGroup
                         meshesToMove.forEach((mesh) => {
                             agvVehicleGroup.add(mesh);
                         });
 
-                        // Align AGV Vehicle bottom to Y=0 ground plane
                         const vehicleBox = new THREE.Box3().setFromObject(agvVehicleGroup);
                         const minY = vehicleBox.min.y;
                         agvVehicleGroup.children.forEach((child) => {
                             child.position.y -= minY;
                         });
 
-                        // Re-calculate Vehicle Size after Y zero-ground adjustment
                         const adjustedVehicleBox = new THREE.Box3().setFromObject(agvVehicleGroup);
                         const vehicleSize = adjustedVehicleBox.getSize(new THREE.Vector3());
 
@@ -369,7 +342,6 @@
                         ];
                         agvCurve = new THREE.CatmullRomCurve3(trackWaypoints, true, 'centripetal', 0.2);
                         
-                        // Visual Path Line
                         const pathPoints = agvCurve.getPoints(120);
                         const pathGeo = new THREE.BufferGeometry().setFromPoints(pathPoints);
                         const pathMat = new THREE.LineBasicMaterial({
@@ -379,14 +351,14 @@
                             linewidth: 2
                         });
                         agvPathLine = new THREE.LineLoop(pathGeo, pathMat);
-                        agvPathLine.position.y = 0.02; // Slightly above ground
+                        agvPathLine.position.y = 0.02;
                         scene.add(agvPathLine);
                     }
 
                     // Calculate optimal camera distance
                     const fov = camera.fov * (Math.PI / 180);
                     let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
-                    cameraZ *= 1.4; // Multiplier to add some padding
+                    cameraZ *= 1.4;
 
                     camera.position.set(cameraZ, maxDim * 0.8, cameraZ);
                     camera.lookAt(adjustedCenter);
@@ -408,15 +380,13 @@
                         const percent = Math.round((xhr.loaded / xhr.total) * 100);
                         progressBar.style.width = percent + '%';
                         progressPercentage.textContent = percent + '%';
-                        
                         if (percent >= 100) {
                             loaderText.textContent = '장면을 생성하는 중...';
                         }
                     } else {
-                        // Fallback when Content-Length header is missing
                         const loadedKB = Math.round(xhr.loaded / 1024);
                         loaderText.textContent = `데이터를 다운로드하는 중 (${loadedKB} KB)...`;
-                        progressBar.style.width = '70%'; // Simulating progress
+                        progressBar.style.width = '70%';
                         progressPercentage.textContent = '--%';
                     }
                 },
@@ -437,45 +407,43 @@
             let pointerDownTime = 0;
             let pointerDownPos = { x: 0, y: 0 };
 
-            const getRaycastTarget = () => (modelKey === 'agv' && agvVehicleGroup ? agvVehicleGroup : loadedModel);
-
-            const handleInteraction = (clientX, clientY) => {
-                const targetObj = getRaycastTarget();
-                if (!targetObj) return;
-
-                mouse.x = (clientX / window.innerWidth) * 2 - 1;
-                mouse.y = -(clientY / window.innerHeight) * 2 + 1;
-                
-                raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObject(targetObj, true);
-                
-                if (intersects.length > 0) {
-                    if (modelKey === 'agv') {
-                        isDriving = !isDriving;
-                    } else if (modelKey === 'rose') {
-                        window.toggleRoseBloom();
-                    }
-                }
-            };
-
-            window.addEventListener('pointerdown', (e) => {
+            canvas.addEventListener('pointerdown', (e) => {
                 pointerDownTime = Date.now();
                 pointerDownPos = { x: e.clientX, y: e.clientY };
             });
 
-            window.addEventListener('pointerup', (e) => {
+            canvas.addEventListener('pointerup', (e) => {
                 const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
                 const pressTime = Date.now() - pointerDownTime;
                 
-                // Relaxed thresholds for mobile touch screens
-                if (moveDist < 20 && pressTime < 600 && (modelKey === 'agv' || modelKey === 'rose')) {
-                    handleInteraction(e.clientX, e.clientY);
+                if (moveDist < 25 && pressTime < 800) {
+                    if (modelKey === 'agv' || modelKey === 'rose') {
+                        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                        
+                        const targetObj = modelKey === 'agv' && agvVehicleGroup ? agvVehicleGroup : loadedModel;
+                        if (!targetObj) return;
+
+                        raycaster.setFromCamera(mouse, camera);
+                        const intersects = raycaster.intersectObject(targetObj, true);
+                        
+                        if (intersects.length > 0) {
+                            if (modelKey === 'agv') {
+                                isDriving = !isDriving;
+                            } else if (modelKey === 'rose') {
+                                _roseBloomed = !_roseBloomed;
+                                console.log('[Rose] Clicked model. Bloomed:', _roseBloomed);
+                            }
+                        }
+                    }
                 }
             });
 
-            window.addEventListener('pointermove', (e) => {
-                const targetObj = getRaycastTarget();
-                if (targetObj && (modelKey === 'agv' || modelKey === 'rose')) {
+            canvas.addEventListener('pointermove', (e) => {
+                if (modelKey === 'agv' || modelKey === 'rose') {
+                    const targetObj = modelKey === 'agv' && agvVehicleGroup ? agvVehicleGroup : loadedModel;
+                    if (!targetObj) return;
+
                     mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
                     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
                     
@@ -512,24 +480,54 @@
                     agvVehicleGroup.lookAt(lookTarget);
                 }
 
-                // Rose Authentic 32-Petal Blooming Animation Update
-                if (modelKey === 'rose' && rosePetals.length > 0) {
-                    rosePetals.forEach((petal) => {
-                        const targetPos = window.isRoseBloomed ? petal.userData.bloomPos : petal.userData.initialPos;
-                        const targetRot = window.isRoseBloomed ? petal.userData.bloomRot : petal.userData.initialRot;
-                        const targetScale = window.isRoseBloomed ? petal.userData.bloomScale : petal.userData.initialScale;
+                // Rose Blooming Animation
+                if (modelKey === 'rose' && loadedModel) {
+                    // Smoothly animate progress 0↔1
+                    const targetProgress = _roseBloomed ? 1 : 0;
+                    _roseAnimProgress += (targetProgress - _roseAnimProgress) * 0.04;
 
-                        // Smooth interpolation (lerp) for opening/closing petals
-                        petal.position.lerp(targetPos, 0.06);
-                        petal.rotation.x = THREE.MathUtils.lerp(petal.rotation.x, targetRot.x, 0.06);
-                        petal.rotation.y = THREE.MathUtils.lerp(petal.rotation.y, targetRot.y, 0.06);
-                        petal.rotation.z = THREE.MathUtils.lerp(petal.rotation.z, targetRot.z, 0.06);
-                        petal.scale.lerp(targetScale, 0.06);
-                    });
+                    // Whole model scale: bud (0.4) → bloom (1.3)
+                    const s = 0.4 + _roseAnimProgress * 0.9;
+                    loadedModel.scale.set(s, s, s);
 
-                    // Gentle whole flower rotation when bloomed
-                    if (window.isRoseBloomed && loadedModel) {
-                        loadedModel.rotation.y += 0.004;
+                    // Gentle rotation when blooming
+                    if (_roseBloomed) {
+                        loadedModel.rotation.y += 0.005;
+                    }
+
+                    // Per-petal outward spread effect
+                    for (let i = 0; i < rosePetalData.length; i++) {
+                        const pd = rosePetalData[i];
+                        const mesh = pd.mesh;
+
+                        // Direction from approximate rose center outward (in local space)
+                        const cx = -0.12, cz = -0.5;
+                        const dx = pd.initPos.x - cx;
+                        const dz = pd.initPos.z - cz;
+                        const dist = Math.sqrt(dx * dx + dz * dz) || 0.001;
+                        const nx = dx / dist;
+                        const nz = dz / dist;
+
+                        // Outer petals (lower index) spread more
+                        const spreadFactor = Math.max(0.3, 1 - i / rosePetalData.length);
+                        const spreadAmount = _roseAnimProgress * spreadFactor * 0.5;
+
+                        mesh.position.x = pd.initPos.x + nx * spreadAmount;
+                        mesh.position.z = pd.initPos.z + nz * spreadAmount;
+                        mesh.position.y = pd.initPos.y + _roseAnimProgress * spreadFactor * 0.1;
+
+                        // Tilt petals outward when blooming
+                        const tiltAmount = _roseAnimProgress * spreadFactor * 0.6;
+                        mesh.rotation.x = pd.initRotX + nz * tiltAmount;
+                        mesh.rotation.z = pd.initRotZ - nx * tiltAmount;
+
+                        // Slight scale increase for XY
+                        const petalScale = 1 + _roseAnimProgress * spreadFactor * 0.4;
+                        mesh.scale.set(
+                            pd.initScale.x * petalScale,
+                            pd.initScale.y * petalScale,
+                            pd.initScale.z
+                        );
                     }
                 }
 
@@ -544,3 +542,4 @@
     </script>
 </body>
 </html>
+
