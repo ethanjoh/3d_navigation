@@ -185,23 +185,19 @@
             controls.minDistance = 0.5;
             controls.maxDistance = 100;
 
-            // 6. Lighting setup
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            // 6. Lighting setup (Universal balanced lighting)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
             scene.add(ambientLight);
 
-            const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.2);
-            dirLight1.position.set(10, 15, 10);
-            dirLight1.castShadow = true;
-            dirLight1.shadow.mapSize.width = 2048;
-            dirLight1.shadow.mapSize.height = 2048;
-            dirLight1.shadow.camera.near = 0.5;
-            dirLight1.shadow.camera.far = 25;
-            dirLight1.shadow.bias = -0.0001;
-            scene.add(dirLight1);
-
-            const dirLight2 = new THREE.DirectionalLight(0xa78bfa, 0.5); // Subtle violet fill light
-            dirLight2.position.set(-10, 5, -10);
-            scene.add(dirLight2);
+            const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            mainLight.position.set(10, 20, 5); // Angled top light to reveal surface details
+            mainLight.castShadow = true;
+            mainLight.shadow.mapSize.width = 2048;
+            mainLight.shadow.mapSize.height = 2048;
+            mainLight.shadow.camera.near = 0.5;
+            mainLight.shadow.camera.far = 50;
+            mainLight.shadow.bias = -0.0001;
+            scene.add(mainLight);
 
             // 7. Grid & Ground Helper
             const gridHelper = new THREE.GridHelper(60, 60, 0x8b5cf6, 0x1f2937);
@@ -227,15 +223,35 @@
                     const model = gltf.scene;
                     loadedModel = model;
                     
-                    // Enable shadows for all meshes in the loaded model
+                    // Enable shadows and apply material fixes for all meshes
                     model.traverse((node) => {
                         if (node.isMesh) {
                             node.castShadow = true;
                             node.receiveShadow = true;
                             
-                            // Enhance materials if needed (roughness, metalness tweak)
                             if (node.material) {
                                 node.material.depthWrite = true;
+                                
+                                // Force unlit materials to Standard so they react to lights correctly
+                                if (!node.material.isMeshStandardMaterial) {
+                                    const newMat = new THREE.MeshStandardMaterial({
+                                        color: node.material.color || new THREE.Color(0xffffff),
+                                        map: node.material.map || null,
+                                        roughness: 0.8,
+                                        metalness: 0.1
+                                    });
+                                    node.material = newMat;
+                                } else {
+                                    node.material.roughness = 0.8; // Prevent blinding reflections
+                                    node.material.metalness = 0.1; 
+                                }
+                                
+                                // Disable glowing emissive values which blow out textures
+                                if (node.material.emissive) {
+                                    node.material.emissive.setHex(0x000000);
+                                }
+                                
+                                node.material.needsUpdate = true;
                             }
                         }
                     });
