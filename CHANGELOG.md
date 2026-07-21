@@ -1,6 +1,11 @@
 <!-- Three.js GLB 뷰어 프로젝트의 변경 사항과 의사 결정 내역을 기록하는 문서 -->
 # CHANGELOG
 
+## [2026-07-21]
+
+### Added
+- `demo` 디렉터리에 추가된 WRL 3D 모델 파일 8종(`agv.wrl`, `ballboy.wrl`, `drill.wrl`, `lab.wrl`, `myroom.wrl`, `nc.wrl`, `robot.wrl`, `rose.wrl`) 버전 관리 추적 및 동기화
+
 ## [2026-07-15]
 
 ### Added
