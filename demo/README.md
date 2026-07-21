@@ -6,7 +6,9 @@
 기존의 WRL(VRML) 파일을 3D 그래픽 도구인 **Blender에서 Import한 후 GLB 포맷으로 변환**하여 Three.js 환경에서 원활히 구동할 수 있도록 최적화되었습니다.  
 
 그래픽 디자이너가 아닌 관계로 모델링이나 렌더링이 예쁘지 않은 점 양해바랍니다.
-추후 조작이 가능하도록 업데이트 될 예정입니다.
+추후 조작이 가능하도록 업데이트 될 예정입니다.  
+
+* **데모:** [https://ethanjoh.github.io/3d_navigation/](https://ethanjoh.github.io/3d_navigation/)
 
 ---
 
