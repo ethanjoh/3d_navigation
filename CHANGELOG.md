@@ -5,7 +5,8 @@
 
 ### Added
 - `demo` 디렉터리에 추가된 WRL 3D 모델 파일 8종(`agv.wrl`, `ballboy.wrl`, `drill.wrl`, `lab.wrl`, `myroom.wrl`, `nc.wrl`, `robot.wrl`, `rose.wrl`) 버전 관리 추적 및 동기화
-- `demo/viewer.html`에 `rose` 3D 모델 마우스/터치 클릭 시 꽃봉오리가 피어나거나 오므라드는 인터랙티브 개화(Blooming) 애니메이션 구현 및 안내 UI 추가
+- `demo/viewer.html`에 `rose` 3D 모델 마우스/터치 클릭 시 꽃봉오리가 피어나거나 오므라드는 32개 꽃잎 개별 사방 개화(Blooming) 애니메이션 구현
+- `demo/viewer.html` 하단 조작 가이드에 `🌹 장미 꽃 피우기 / 오므라들기` 직관적 인터랙티브 버튼 추가 및 모바일 터치 감도(Distance & Press Time Threshold) 개선
 
 ## [2026-07-15]
 

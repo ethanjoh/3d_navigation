@@ -154,11 +154,17 @@
                 clickHint.innerHTML = '🚗 <strong>AGV 차량 클릭</strong> : 궤도 자율 주행 시작/정지 토글';
                 guideContainer.prepend(clickHint);
             } else if (modelKey === 'rose' && guideContainer) {
-                const clickHint = document.createElement('p');
-                clickHint.style.color = '#f43f5e';
-                clickHint.style.fontWeight = '600';
-                clickHint.innerHTML = '🌹 <strong>장미 꽃 클릭</strong> : 피어나기 / 오므라들기 토글';
-                guideContainer.prepend(clickHint);
+                const clickBtn = document.createElement('button');
+                clickBtn.id = 'btn-toggle-rose';
+                clickBtn.className = 'btn-interactive-toggle';
+                clickBtn.style.cssText = 'background: linear-gradient(135deg, #f43f5e, #e11d48); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 0.5rem; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3); transition: all 0.2s;';
+                clickBtn.innerHTML = '🌹 <strong>장미 꽃 피우기 / 오므라들기</strong>';
+                guideContainer.prepend(clickBtn);
+
+                clickBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    isRoseBloomed = !isRoseBloomed;
+                });
             }
 
             // Start initializing Three.js application
@@ -421,6 +427,25 @@
 
             const getRaycastTarget = () => (modelKey === 'agv' && agvVehicleGroup ? agvVehicleGroup : loadedModel);
 
+            const handleInteraction = (clientX, clientY) => {
+                const targetObj = getRaycastTarget();
+                if (!targetObj) return;
+
+                mouse.x = (clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+                
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObject(targetObj, true);
+                
+                if (intersects.length > 0) {
+                    if (modelKey === 'agv') {
+                        isDriving = !isDriving;
+                    } else if (modelKey === 'rose') {
+                        isRoseBloomed = !isRoseBloomed;
+                    }
+                }
+            };
+
             window.addEventListener('pointerdown', (e) => {
                 pointerDownTime = Date.now();
                 pointerDownPos = { x: e.clientX, y: e.clientY };
@@ -429,23 +454,10 @@
             window.addEventListener('pointerup', (e) => {
                 const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
                 const pressTime = Date.now() - pointerDownTime;
-                const targetObj = getRaycastTarget();
                 
-                // Only trigger if it was a quick click without dragging camera
-                if (moveDist < 6 && pressTime < 300 && targetObj && (modelKey === 'agv' || modelKey === 'rose')) {
-                    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-                    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-                    
-                    raycaster.setFromCamera(mouse, camera);
-                    const intersects = raycaster.intersectObject(targetObj, true);
-                    
-                    if (intersects.length > 0) {
-                        if (modelKey === 'agv') {
-                            isDriving = !isDriving;
-                        } else if (modelKey === 'rose') {
-                            isRoseBloomed = !isRoseBloomed;
-                        }
-                    }
+                // Relaxed thresholds for mobile touch screens
+                if (moveDist < 20 && pressTime < 600 && (modelKey === 'agv' || modelKey === 'rose')) {
+                    handleInteraction(e.clientX, e.clientY);
                 }
             });
 
