@@ -129,6 +129,12 @@
         const errorMessage = document.getElementById('error-message');
         const loadingScreen = document.getElementById('loading-screen');
 
+        // Global State & Toggles
+        window.isRoseBloomed = false;
+        window.toggleRoseBloom = function() {
+            window.isRoseBloomed = !window.isRoseBloomed;
+        };
+
         if (!modelData) {
             // Invalid model parameter
             loaderText.style.display = 'none';
@@ -157,13 +163,20 @@
                 const clickBtn = document.createElement('button');
                 clickBtn.id = 'btn-toggle-rose';
                 clickBtn.className = 'btn-interactive-toggle';
-                clickBtn.style.cssText = 'background: linear-gradient(135deg, #f43f5e, #e11d48); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 0.5rem; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3); transition: all 0.2s;';
+                clickBtn.style.cssText = 'background: linear-gradient(135deg, #f43f5e, #e11d48); color: white; border: none; padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 0.5rem; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4); font-size: 0.85rem; z-index: 1000; position: relative;';
                 clickBtn.innerHTML = '🌹 <strong>장미 꽃 피우기 / 오므라들기</strong>';
                 guideContainer.prepend(clickBtn);
 
                 clickBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
                     e.stopPropagation();
-                    isRoseBloomed = !isRoseBloomed;
+                    window.toggleRoseBloom();
+                });
+
+                clickBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.toggleRoseBloom();
                 });
             }
 
@@ -234,7 +247,6 @@
             let progress = 0;
 
             // Rose Blooming Interaction Variables
-            let isRoseBloomed = false;
             let rosePetals = [];
 
             // 8. GLTF/GLB Loader
@@ -441,7 +453,7 @@
                     if (modelKey === 'agv') {
                         isDriving = !isDriving;
                     } else if (modelKey === 'rose') {
-                        isRoseBloomed = !isRoseBloomed;
+                        window.toggleRoseBloom();
                     }
                 }
             };
@@ -503,9 +515,9 @@
                 // Rose Authentic 32-Petal Blooming Animation Update
                 if (modelKey === 'rose' && rosePetals.length > 0) {
                     rosePetals.forEach((petal) => {
-                        const targetPos = isRoseBloomed ? petal.userData.bloomPos : petal.userData.initialPos;
-                        const targetRot = isRoseBloomed ? petal.userData.bloomRot : petal.userData.initialRot;
-                        const targetScale = isRoseBloomed ? petal.userData.bloomScale : petal.userData.initialScale;
+                        const targetPos = window.isRoseBloomed ? petal.userData.bloomPos : petal.userData.initialPos;
+                        const targetRot = window.isRoseBloomed ? petal.userData.bloomRot : petal.userData.initialRot;
+                        const targetScale = window.isRoseBloomed ? petal.userData.bloomScale : petal.userData.initialScale;
 
                         // Smooth interpolation (lerp) for opening/closing petals
                         petal.position.lerp(targetPos, 0.06);
@@ -516,7 +528,7 @@
                     });
 
                     // Gentle whole flower rotation when bloomed
-                    if (isRoseBloomed && loadedModel) {
+                    if (window.isRoseBloomed && loadedModel) {
                         loadedModel.rotation.y += 0.004;
                     }
                 }

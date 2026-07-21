@@ -8,6 +8,9 @@
 - `demo/viewer.html`에 `rose` 3D 모델 마우스/터치 클릭 시 꽃봉오리가 피어나거나 오므라드는 32개 꽃잎 개별 사방 개화(Blooming) 애니메이션 구현
 - `demo/viewer.html` 하단 조작 가이드에 `🌹 장미 꽃 피우기 / 오므라들기` 직관적 인터랙티브 버튼 추가 및 모바일 터치 감도(Distance & Press Time Threshold) 개선
 
+### Fixed
+- `demo/viewer.html`에서 `isRoseBloomed` 변수 스코프 바인딩 오류(ReferenceError) 수정 및 전역 이벤트 토글 핸들러(`window.toggleRoseBloom`)로 정상 재구성
+
 ## [2026-07-15]
 
 ### Added
