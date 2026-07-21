@@ -161,8 +161,8 @@
             
             // 2. Scene setup
             const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0b0d);
-            scene.fog = new THREE.FogExp2(0x0a0b0d, 0.015);
+            scene.background = new THREE.Color('#e0e0e0');
+            scene.fog = new THREE.FogExp2('#e0e0e0', 0.005);
 
             // 3. Camera setup
             const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -174,7 +174,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.outputEncoding = THREE.sRGBEncoding; // Missing sRGB encoding causes dark/washed colors
+            renderer.outputColorSpace = THREE.SRGBColorSpace; // Correct property for Three.js >= r152
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             renderer.toneMappingExposure = 1.0;
 
