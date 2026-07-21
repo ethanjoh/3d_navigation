@@ -113,7 +113,7 @@
             },
             rose: {
                 title: "Rose Center",
-                desc: "rose-exam 폴더의 rose.glb 파일입니다. 장미 꽃잎 기하학 구조와 파라메트릭 다각형 형상을 3D 공간에 구현한 데이터입니다.",
+                desc: "rose-exam 폴더의 rose.glb 파일입니다. 마우스나 터치로 장미를 클릭하면 꽃봉오리가 아름답게 피어나거나 오므라듭니다.",
                 path: "rose-exam/rose.glb"
             }
         };
@@ -145,16 +145,20 @@
             document.getElementById('info-desc').textContent = modelData.desc;
             document.title = `${modelData.title} - 3D Viewer`;
 
-            // AGV Click Hint UI
-            if (modelKey === 'agv') {
-                const guideContainer = document.querySelector('.controls-guide');
-                if (guideContainer) {
-                    const clickHint = document.createElement('p');
-                    clickHint.style.color = '#60a5fa';
-                    clickHint.style.fontWeight = '600';
-                    clickHint.innerHTML = '🚗 <strong>AGV 차량 클릭</strong> : 궤도 자율 주행 시작/정지 토글';
-                    guideContainer.prepend(clickHint);
-                }
+            // AGV & Rose Click Hint UI
+            const guideContainer = document.querySelector('.controls-guide');
+            if (modelKey === 'agv' && guideContainer) {
+                const clickHint = document.createElement('p');
+                clickHint.style.color = '#60a5fa';
+                clickHint.style.fontWeight = '600';
+                clickHint.innerHTML = '🚗 <strong>AGV 차량 클릭</strong> : 궤도 자율 주행 시작/정지 토글';
+                guideContainer.prepend(clickHint);
+            } else if (modelKey === 'rose' && guideContainer) {
+                const clickHint = document.createElement('p');
+                clickHint.style.color = '#f43f5e';
+                clickHint.style.fontWeight = '600';
+                clickHint.innerHTML = '🌹 <strong>장미 꽃 클릭</strong> : 피어나기 / 오므라들기 토글';
+                guideContainer.prepend(clickHint);
             }
 
             // Start initializing Three.js application
@@ -215,13 +219,19 @@
             gridHelper.material.transparent = true;
             scene.add(gridHelper);
 
-            // AGV Special Variables
+            // AGV & Rose Special Variables
             let loadedModel = null;
             let agvVehicleGroup = null;
             let agvCurve = null;
             let agvPathLine = null;
             let isDriving = false;
             let progress = 0;
+
+            // Rose Blooming Interaction Variables
+            let isRoseBloomed = false;
+            const roseBudScale = new THREE.Vector3(0.4, 0.4, 0.4);
+            const roseBloomScale = new THREE.Vector3(1.25, 1.25, 1.25);
+            let rosePetals = [];
 
             // 8. GLTF/GLB Loader
             const loader = new GLTFLoader();
@@ -242,8 +252,16 @@
                             if (node.material) {
                                 node.material.depthWrite = true;
                             }
+
+                            if (modelKey === 'rose') {
+                                rosePetals.push(node);
+                            }
                         }
                     });
+
+                    if (modelKey === 'rose') {
+                        model.scale.copy(roseBudScale);
+                    }
 
                     scene.add(model);
 
@@ -385,7 +403,7 @@
                 const targetObj = getRaycastTarget();
                 
                 // Only trigger if it was a quick click without dragging camera
-                if (moveDist < 6 && pressTime < 300 && targetObj && modelKey === 'agv') {
+                if (moveDist < 6 && pressTime < 300 && targetObj && (modelKey === 'agv' || modelKey === 'rose')) {
                     mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
                     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
                     
@@ -393,14 +411,18 @@
                     const intersects = raycaster.intersectObject(targetObj, true);
                     
                     if (intersects.length > 0) {
-                        isDriving = !isDriving;
+                        if (modelKey === 'agv') {
+                            isDriving = !isDriving;
+                        } else if (modelKey === 'rose') {
+                            isRoseBloomed = !isRoseBloomed;
+                        }
                     }
                 }
             });
 
             window.addEventListener('pointermove', (e) => {
                 const targetObj = getRaycastTarget();
-                if (targetObj && modelKey === 'agv') {
+                if (targetObj && (modelKey === 'agv' || modelKey === 'rose')) {
                     mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
                     mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
                     
@@ -435,6 +457,26 @@
                     
                     const lookTarget = new THREE.Vector3(nextPos.x, agvVehicleGroup.position.y, nextPos.z);
                     agvVehicleGroup.lookAt(lookTarget);
+                }
+
+                // Rose Blooming Animation Update
+                if (modelKey === 'rose' && loadedModel) {
+                    const targetScale = isRoseBloomed ? roseBloomScale : roseBudScale;
+                    loadedModel.scale.lerp(targetScale, 0.04);
+
+                    // Add subtle rotation and petal spreading effect when bloomed
+                    if (isRoseBloomed) {
+                        loadedModel.rotation.y += 0.008;
+                        rosePetals.forEach((petal, idx) => {
+                            const expandFactor = (idx + 1) * 0.005;
+                            petal.rotation.z = Math.sin(Date.now() * 0.002 + idx) * 0.08;
+                        });
+                    } else {
+                        loadedModel.rotation.y = THREE.MathUtils.lerp(loadedModel.rotation.y, 0, 0.05);
+                        rosePetals.forEach((petal) => {
+                            petal.rotation.z = THREE.MathUtils.lerp(petal.rotation.z, 0, 0.05);
+                        });
+                    }
                 }
 
                 // Update controls
